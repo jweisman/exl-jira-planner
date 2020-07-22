@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { PlannerComponent } from './planner/planner.component';
-import { TestComponent } from './test/test.component';
 import { CapacityComponent } from './capacity/capacity.component';
 import { MainComponent } from './main/main.component';
 
