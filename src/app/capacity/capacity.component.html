@@ -1,0 +1,21 @@
+<div class="loading-shade" *ngIf="loading">
+  <mat-progress-spinner 
+    mode="indeterminate"
+    diameter="50"
+    >
+  </mat-progress-spinner>
+</div>
+<table *ngIf="versions">
+  <tr>
+    <th>Team</th>
+    <th *ngFor="let version of versions">{{version.name}}</th>
+  </tr>
+  <tr *ngFor="let team of teams">
+    <th>{{team}}</th>
+    <td *ngFor="let version of versions">
+      <input type="text" [(ngModel)]="capacity[team][version.id]">
+    </td>
+  </tr>
+</table>
+<button mat-stroked-button (click)="add()">Add team</button>
+<button mat-stroked-button color="primary" (click)="save()">Save</button>

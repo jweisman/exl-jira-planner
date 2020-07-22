@@ -1,0 +1,21 @@
+:host {
+  margin: 20px;
+  display: block;
+}
+
+table {
+  max-width: calc(100% - 10px);
+  margin-bottom: 20px;
+}
+
+td {
+  text-align: center;
+}
+
+input {
+  width: 100px;
+}
+
+button {
+  margin-right: 5px;
+}

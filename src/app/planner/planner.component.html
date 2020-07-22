@@ -1,0 +1,60 @@
+<div class="loading-shade" *ngIf="loading">
+  <mat-progress-spinner 
+    mode="indeterminate"
+    diameter="50"
+    >
+  </mat-progress-spinner>
+</div>
+<mat-form-field>
+  <mat-label>Team Leader</mat-label>
+  <mat-select (selectionChange)="selectTeam($event)">
+    <mat-option *ngFor="let tl of teamleaders" [value]="tl">
+      {{teams[tl].displayName}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+<div cdkDropListGroup *ngIf="issues" class="grid">
+  <div class="planner-container" *ngFor="let version of versions">
+    <h3>{{version.name}}</h3>
+    <div
+      cdkDropList
+      [cdkDropListData]="issues[version.id]"
+      class="planner-list"
+      cdkDropListSortingDisabled
+      (cdkDropListDropped)="drop($event)">
+      <div class="planner-box" *ngFor="let issue of issues[version.id]" cdkDrag>
+        <span><img src="{{issue.fields.issuetype.iconUrl}}"><a target="_blank" href="{{jiraHost}}/browse/{{issue.key}}">{{issue.fields.summary}}</a></span><span>{{issue.fields.customfield_10132}}</span>
+      </div>
+    </div>
+    <div class="planner-summary">
+        <span><strong>CAPACITY / SCHEDULED</strong></span>
+        <span [style.background-color]="status(version.id)">{{ teamCapacity(version.id) }} / {{ sum(version.id) }}</span>
+    </div>
+  </div>    
+</div>
+<!--
+  Description
+summary
+Assignee key, name
+issuetype iconUrl, name
+10132
+customfield_10132
+-->
+<!--
+<mat-tab-group dynamicHeight>
+  <mat-tab *ngFor="let team of teams;" [label]="throughput[team].name">
+    <div class="planner-container" *ngFor="let version of versions">
+      <h2>{{version.name}}</h2>
+  
+      <div
+        cdkDropList
+        [cdkDropListData]="issues"
+        class="planner-list"
+        cdkDropListSortingDisabled
+        (cdkDropListDropped)="drop($event)">
+        <div class="planner-box" *ngFor="let issue of issues" cdkDrag>{{issue}}</div>
+      </div>
+    </div>    
+  </mat-tab>
+</mat-tab-group>
+-->
