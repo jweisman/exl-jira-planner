@@ -7,6 +7,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
+import { MatMenuModule } from '@angular/material/menu';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -38,7 +39,8 @@ import { MainComponent } from './main/main.component';
       MatTabsModule,
       MatSelectModule,
       MatProgressSpinnerModule,
-      MatButtonModule
+      MatButtonModule,
+      MatMenuModule,
    ],
    providers: [
       {

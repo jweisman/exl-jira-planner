@@ -7,7 +7,7 @@
 </div>
 <mat-form-field>
   <mat-label>Team Leader</mat-label>
-  <mat-select (selectionChange)="selectTeam($event)">
+  <mat-select (selectionChange)="onSelectTeam($event)">
     <mat-option *ngFor="let tl of teamleaders" [value]="tl">
       {{teams[tl].displayName}}
     </mat-option>
@@ -21,8 +21,9 @@
       [cdkDropListData]="issues[version.id]"
       class="planner-list"
       cdkDropListSortingDisabled
+      [attr.data-versionid]="version.id"
       (cdkDropListDropped)="drop($event)">
-      <div class="planner-box" *ngFor="let issue of issues[version.id]" cdkDrag>
+      <div class="planner-box" *ngFor="let issue of issues[version.id]; index as i" (contextmenu)="onContextMenu($event, i, version.id)" cdkDrag>
         <span><img src="{{issue.fields.issuetype.iconUrl}}"><a target="_blank" href="{{jiraHost}}/browse/{{issue.key}}">{{issue.fields.summary}}</a></span><span>{{issue.fields.customfield_10132}}</span>
       </div>
     </div>
@@ -32,29 +33,22 @@
     </div>
   </div>    
 </div>
+<div style="visibility: hidden; position: fixed"
+    [style.left]="contextMenuPosition.x"
+    [style.top]="contextMenuPosition.y"
+    [matMenuTriggerFor]="contextMenu">
+</div>
+<mat-menu #contextMenu="matMenu">
+  <button mat-menu-item [matMenuTriggerFor]="moveSprint">Move Sprint</button>
+</mat-menu>
+<mat-menu #moveSprint="matMenu">
+  <ng-template matMenuContent>
+    <button mat-menu-item *ngFor="let version of versions"  (click)="onMoveVersion(version.id)">{{version.name}}</button>
+  </ng-template>
+</mat-menu>
+<div class="command-container">
+  <button mat-stroked-button color="primary" [disabled]="!ready" (click)="update()">Update Issues</button>
+</div>
 <!--
-  Description
-summary
-Assignee key, name
-issuetype iconUrl, name
-10132
-customfield_10132
--->
-<!--
-<mat-tab-group dynamicHeight>
-  <mat-tab *ngFor="let team of teams;" [label]="throughput[team].name">
-    <div class="planner-container" *ngFor="let version of versions">
-      <h2>{{version.name}}</h2>
-  
-      <div
-        cdkDropList
-        [cdkDropListData]="issues"
-        class="planner-list"
-        cdkDropListSortingDisabled
-        (cdkDropListDropped)="drop($event)">
-        <div class="planner-box" *ngFor="let issue of issues" cdkDrag>{{issue}}</div>
-      </div>
-    </div>    
-  </mat-tab>
-</mat-tab-group>
+<pre>{{issuesToUpdate | json}}</pre>
 -->

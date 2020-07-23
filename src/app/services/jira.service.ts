@@ -6,7 +6,7 @@ import { Version } from '../models/jira';
 import { HttpParams } from '@angular/common/http';
 
 const NUM_OF_SPRINTS = 9;
-const MAX_ISSUES = 200;
+const ISSUES_BULK_SIZE = 200;
 
 @Injectable({
   providedIn: 'root'
@@ -29,14 +29,19 @@ export class JiraService {
   getIssues(user: string, versions: Array<Version>) {
     let params = new HttpParams()
       .set('jql', `project = URM and fixVersion in (${versions.map(v=>v.id).join(',')}) and issuetype in (Story, Task) and assignee = ${user}`)
-      .set('maxResults', MAX_ISSUES.toString());
+      .set('maxResults', ISSUES_BULK_SIZE.toString());
     return this.http.get<any>('/search', { params: params }).pipe(
-      expand( response => response.startAt + response.issues.length >= response.total ? empty() : this.http.get<any>('/search', {params: params.set('startAt', response.startAt + MAX_ISSUES)})),
+      expand( response => response.startAt + response.issues.length >= response.total ? empty() : this.http.get<any>('/search', {params: params.set('startAt', response.startAt + ISSUES_BULK_SIZE)})),
       map( obj => obj.issues ),
       reduce((acc, x) => acc.concat(x), []),
       /* Filter out defect allocations */
       map(issues=>issues.filter(i=>!(i.fields.issuetype.id==3 && /defect/i.test(i.fields.summary))))
     )
+  }
+
+  updateFixVersion(key: string, id: string) {
+    const body = {"update":{"fixVersions":[{"set": [ {"id":id}]}]}};
+    return this.http.put(`/issue/${key}`, body);
   }
 
 }

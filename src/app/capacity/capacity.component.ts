@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { JiraService } from '../services/jira.service';
 import { Version } from '../models/jira';
 import { CapacityService } from '../services/capacity.service';
@@ -15,6 +15,7 @@ export class CapacityComponent implements OnInit {
   versions: Array<Version>;
   capacity: Capacity;
   loading = false;
+  @ViewChild('form') form: any;
 
   constructor(
     private jira: JiraService,
@@ -52,5 +53,4 @@ export class CapacityComponent implements OnInit {
   get teams() {
     return Object.keys(this.capacity);
   }
-
 }

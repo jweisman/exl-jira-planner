@@ -5,6 +5,7 @@
     >
   </mat-progress-spinner>
 </div>
+<form #form="ngForm" id="form">
 <table *ngIf="versions">
   <tr>
     <th>Team</th>
@@ -13,9 +14,10 @@
   <tr *ngFor="let team of teams">
     <th>{{team}}</th>
     <td *ngFor="let version of versions">
-      <input type="text" [(ngModel)]="capacity[team][version.id]">
+      <input type="text" [(ngModel)]="capacity[team][version.id]" [name]="team+version.id">
     </td>
   </tr>
 </table>
+</form>
 <button mat-stroked-button (click)="add()">Add team</button>
 <button mat-stroked-button color="primary" (click)="save()">Save</button>

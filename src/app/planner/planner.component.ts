@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { environment } from 'src/environments/environment';
 import { switchMap, tap, finalize } from 'rxjs/operators';
 import { JiraHttpClient } from '../services/httpClient';
@@ -8,8 +8,9 @@ import { MatSelectChange } from '@angular/material/select';
 import { Issues, Teams, Capacity } from '../models/planner';
 import { JiraService } from '../services/jira.service';
 import { CapacityService } from '../services/capacity.service';
-import { Version } from '../models/jira';
+import { Version, Issue } from '../models/jira';
 import { ToastrService } from 'ngx-toastr';
+import { MatMenuTrigger } from '@angular/material/menu';
 
 @Component({
   selector: 'app-planner',
@@ -24,6 +25,9 @@ export class PlannerComponent implements OnInit {
   selectedTeam: string;
   jiraHost = environment.jiraUrl;
   capacity: Capacity;
+  @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
+  contextMenuPosition = { x: '0px', y: '0px' };
+  issuesToUpdate: { [key: string]: string } = {};
 
   constructor(
     private http: JiraHttpClient,
@@ -56,10 +60,14 @@ export class PlannerComponent implements OnInit {
     });
   }
 
-  selectTeam(event: MatSelectChange) {
-    this.selectedTeam = event.value;
+  onSelectTeam(event: MatSelectChange) {
+    this.selectTeam(event.value);
+  }
+
+  selectTeam(team: string) {
+    this.selectedTeam = team;
     this.loading = true;
-    this.jira.getIssues(event.value, this.versions).pipe(
+    this.jira.getIssues(team, this.versions).pipe(
       finalize(()=>this.loading = false)
     )
     .subscribe(issues=>{
@@ -99,7 +107,7 @@ export class PlannerComponent implements OnInit {
     return Object.keys(this.teams);
   }
 
-  drop(event: CdkDragDrop<string[]>) {
+  drop(event: CdkDragDrop<Issue[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(
         event.container.data, 
@@ -113,7 +121,50 @@ export class PlannerComponent implements OnInit {
         event.previousIndex,
         event.currentIndex
       );
+      this.issuesToUpdate[event.container.data[event.currentIndex].key] = event.container.element.nativeElement.dataset.versionid;
     }
+  }
+
+  onContextMenu(event: MouseEvent, issueIndex: number, versionId: number) {
+    event.preventDefault();
+    this.contextMenuPosition.x = event.clientX + 'px';
+    this.contextMenuPosition.y = event.clientY + 'px';
+    this.contextMenu.menuData = { issueIndex, versionId };
+    this.contextMenu.menu.focusFirstItem('mouse');
+    this.contextMenu.openMenu();
+  }
+
+  onMoveVersion(versionId: string) {
+    if (this.issues[this.contextMenu.menuData.versionId] == this.issues[versionId])
+      return;
+
+    const newIndex = this.issues[versionId].length;
+    transferArrayItem(
+      this.issues[this.contextMenu.menuData.versionId],
+      this.issues[versionId],
+      this.contextMenu.menuData.issueIndex,
+      newIndex
+    );
+    this.issuesToUpdate[this.issues[versionId][newIndex].key] = versionId;
+  }
+
+  update() {
+    this.loading = true;
+    this.jira.updateFixVersion('URM-134257', "30273")
+    forkJoin(Object.entries(this.issuesToUpdate).map(([key, value])=>this.jira.updateFixVersion(key, value)))
+    .pipe(finalize(()=>this.loading = false))
+    .subscribe({
+      next: () => {
+        this.toastr.success(`Successfully updated ${Object.keys(this.issuesToUpdate).length} issue(s)`);
+        this.issuesToUpdate = {};
+        setTimeout(() => this.selectTeam(this.selectedTeam), 1000);
+      },
+      error: err => this.toastr.error("Error updated issues: " + err.message)
+    })
+  }
+
+  get ready() {
+    return Object.keys(this.issuesToUpdate).length != 0;
   }
 
 

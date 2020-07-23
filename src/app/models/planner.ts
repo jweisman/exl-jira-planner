@@ -1,5 +1,7 @@
+import { Issue } from './jira';
+
 export interface Issues {
-  [key: string]: Array<any>
+  [key: string]: Array<Issue>
 }
 
 export interface Teams { 
