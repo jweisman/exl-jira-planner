@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { switchMap, tap, finalize } from 'rxjs/operators';
+import { switchMap, tap, finalize, catchError } from 'rxjs/operators';
 import { JiraHttpClient } from '../services/httpClient';
 import { forkJoin } from 'rxjs';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -30,7 +30,6 @@ export class PlannerComponent implements OnInit {
   issuesToUpdate: { [key: string]: string } = {};
 
   constructor(
-    private http: JiraHttpClient,
     private jira: JiraService,
     private capacityService: CapacityService,
     private toastr: ToastrService
@@ -39,7 +38,7 @@ export class PlannerComponent implements OnInit {
   ngOnInit() {
     this.capacityService.get().pipe(
       tap( capacity => this.capacity = capacity ),
-      switchMap( () => forkJoin(Object.keys(this.capacity).map(user=>this.http.get<any>(`/user?username=${user}`)))),
+      switchMap( () => forkJoin(Object.keys(this.capacity).map(user=>this.jira.getUser(user)))),
       tap(results => {
         results.forEach( user => {
           this.teams[user.key] = {
