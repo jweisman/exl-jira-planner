@@ -1,11 +1,13 @@
 const express = require('express'),
       OAuth = require('oauth').OAuth,
-      cors = require('cors');
+      cors = require('cors'),
+      proxy = require('http-proxy-middleware');
+
 
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3000;
-const JIRA_SERVER = process.env.JIRA_SERVER;
+const JIRA_SERVER = process.env.JIRA_SERVER || 'https://jira.exlibrisgroup.com';
 const app = express(),
       session = require('express-session'),
       MemoryStore = require('memorystore')(session);
@@ -28,26 +30,35 @@ if (app.get('env') === 'production') {
 app.use(session(sess))
 .use(cors());
 
-const getHost = (req) => (req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host');
+const getHost = (req) => {
+  /* Get API Gateway stage if running in AWS */
+  let stage = '';
+  if (req.headers['x-apigateway-event']) {
+    const event = JSON.parse(decodeURIComponent(req.headers['x-apigateway-event']));
+    if (event.requestContext && event.requestContext.stage) {
+      stage = '/' + event.requestContext.stage;
+    }
+  }
+  return (req.headers['x-forwarded-proto'] || req.protocol) + '://' + req.get('host') + stage;
+}
 
 const consumer = (url = null) => 
   new OAuth(
     `${JIRA_SERVER}/plugins/servlet/oauth/request-token`,
     `${JIRA_SERVER}/plugins/servlet/oauth/access-token`,
     process.env.CONSUMER_KEY,
-    process.env.CONSUMER_PRIVATE_KEY,
+    JSON.parse(`"${process.env.CONSUMER_PRIVATE_KEY}"`), // convert '\n'
     "1.0",
     url + '/sessions/callback',
     "RSA-SHA1"
   );
 
-app.get('/', (req, res) => res.send('Jira OAuth Servlet'));
-
 app.get('/sessions/connect', async (request, response) => {
+  console.log('got here');
 	consumer(getHost(request)).getOAuthRequestToken(
 		function(error, oauthToken, oauthTokenSecret, results) {
     	if (error) {
-				console.error(error.data);
+				console.error(error);
       	response.send('Error getting OAuth access token');
 			} else {
       	request.session.oauthRequestToken = oauthToken;
@@ -60,7 +71,6 @@ app.get('/sessions/connect', async (request, response) => {
 
 app.get('/sessions/callback', async (request, response) => {
   const referrer = request.headers.referer;
-  console.log('referrer', referrer);
 	consumer().getOAuthAccessToken (
 		request.session.oauthRequestToken, 
 		request.session.oauthRequestTokenSecret, 
@@ -76,11 +86,10 @@ app.get('/sessions/callback', async (request, response) => {
           token: oauthAccessToken,
           secret: oauthAccessTokenSecret
         }
-        //response.send({result: 'OK'});
         response.send(`
           <p>Returning...</p>
           <script>
-            window.opener.postMessage(${JSON.stringify(resp)}, "${referrer ? referrer : "*"}");
+            window.opener.postMessage(${JSON.stringify(resp)}, "*");
             window.close();
           </script>
         `)
@@ -89,19 +98,27 @@ app.get('/sessions/callback', async (request, response) => {
 		)
   });
 
-  
-app.get('/authHeader', async (request, response) => {
-  //https://jira.exlibrisgroup.com/rest/api/latest/issue/URM-123286.json
-  try {
-    const header = consumer().authHeader(request.query.url, 
-      request.session.oauthAccessToken, 
-      request.session.oauthAccessTokenSecret,
-      request.query.method || 'GET');
-    response.send({authHeader: header});
-  } catch(e) {
-    console.error('Error creating Auth Header', e.message);
-    response.status(400).send('Error creating Auth Header');
-  }
-});
+app.use(
+  '/',
+  proxy({  
+    target: JIRA_SERVER,
+    changeOrigin: true,
+    onProxyReq: (proxyReq, req, res) => {
+      if (req.method === 'OPTIONS') {
+        res.writeHead(200, CORS_HEADERS);
+        res.end();
+        proxyReq.abort();
+      } else {
+        let header = consumer().authHeader(
+          JIRA_SERVER + req.url,
+          req.headers['x-oauth-token'], 
+          req.headers['x-oauth-secret'],
+          req.method || 'GET');
+        proxyReq.setHeader('Authorization', header);
+      }
+    } 
+  })
+);
 
-app.listen(PORT);
+module.exports = app;
+if (!!!process.env.LAMBDA_TASK_ROOT) app.listen(PORT);

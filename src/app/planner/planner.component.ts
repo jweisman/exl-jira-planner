@@ -1,7 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { environment } from 'src/environments/environment';
-import { switchMap, tap, finalize, catchError } from 'rxjs/operators';
-import { JiraHttpClient } from '../services/httpClient';
+import { switchMap, tap, finalize } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { MatSelectChange } from '@angular/material/select';
@@ -36,6 +35,7 @@ export class PlannerComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.loading = true;
     this.capacityService.get().pipe(
       tap( capacity => this.capacity = capacity ),
       switchMap( () => forkJoin(Object.keys(this.capacity).map(user=>this.jira.getUser(user)))),
@@ -53,6 +53,7 @@ export class PlannerComponent implements OnInit {
         this.issues = {};
         this.versions.forEach(v=>this.issues[v.id]=[]);
       }),
+      finalize(()=>this.loading=false)
     )
     .subscribe({
       error: err => this.toastr.error('Error retrieving data')
@@ -66,6 +67,8 @@ export class PlannerComponent implements OnInit {
   selectTeam(team: string) {
     this.selectedTeam = team;
     this.loading = true;
+    /* Clear issue arrays */
+    Object.keys(this.issues).forEach(id=>this.issues[id]=[]);
     this.jira.getIssues(team, this.versions).pipe(
       finalize(()=>this.loading = false)
     )
@@ -149,7 +152,6 @@ export class PlannerComponent implements OnInit {
 
   update() {
     this.loading = true;
-    this.jira.updateFixVersion('URM-134257', "30273")
     forkJoin(Object.entries(this.issuesToUpdate).map(([key, value])=>this.jira.updateFixVersion(key, value)))
     .pipe(finalize(()=>this.loading = false))
     .subscribe({
@@ -165,26 +167,4 @@ export class PlannerComponent implements OnInit {
   get ready() {
     return Object.keys(this.issuesToUpdate).length != 0;
   }
-
-
-  /*
-  login() {
-    let auth = localStorage.getItem(JIRA_AUTH_STORAGE);
-    if (!auth) {
-      window.open(environment.jiraLoginUrl + '/sessions/connect' , "_blank", WINDOW_PROPS);
-    } else {
-      console.log('found');
-      this.jiraAuth = JSON.parse(auth);
-    }
-  }
-
-  @HostListener('window:message', ['$event'])
-  onMessage(event: MessageEvent) {
-    if (environment.jiraLoginUrl.startsWith(event.origin)) {
-      console.log('matches');
-      localStorage.setItem(JIRA_AUTH_STORAGE, JSON.stringify(event.data));
-      this.jiraAuth = event.data;
-    }
-  }  
-  */
 }

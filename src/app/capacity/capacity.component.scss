@@ -19,3 +19,11 @@ input {
 button {
   margin-right: 5px;
 }
+
+td span {
+  white-space: nowrap;
+}
+
+td span mat-icon {
+  cursor: pointer;
+}

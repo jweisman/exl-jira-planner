@@ -1,0 +1,14 @@
+version: '2' 
+
+services:
+  angular: # name of the first service
+    build: . # specify the directory of the Dockerfile
+    ports:
+      - "8090:80" 
+
+  express: #name of the second service
+    build: proxy # specify the directory of the Dockerfile
+    ports:
+      - "8091:3000"
+    env_file:
+      - proxy/.env

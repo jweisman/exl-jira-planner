@@ -1,13 +1,16 @@
 <h1>Jira Planner</h1>
-<mat-tab-group>
-  <mat-tab label="Planning">
-    <ng-template matTabContent>
-      <app-planner></app-planner>
-    </ng-template>
-  </mat-tab>
-  <mat-tab label="Capacity">
-    <ng-template matTabContent>
-      <app-capacity></app-capacity>
-    </ng-template>
-  </mat-tab>
-</mat-tab-group>
+<div *ngIf="authenticated">
+  <mat-tab-group>
+    <mat-tab label="Planning">
+      <ng-template matTabContent>
+        <app-planner></app-planner>
+      </ng-template>
+    </mat-tab>
+    <mat-tab label="Capacity">
+      <ng-template matTabContent>
+        <app-capacity></app-capacity>
+      </ng-template>
+    </mat-tab>
+  </mat-tab-group>
+  <div class="footer" *ngIf="user">Logged in to <a href="{{jiraHome}}" target="_blank">{{jiraHome}}</a> as {{user.name}} (<a href="#" (click)="logout()">Logout</a>)</div>
+</div>

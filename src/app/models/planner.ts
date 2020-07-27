@@ -14,3 +14,8 @@ export interface Teams {
 export interface Capacity {
   [key: string]: { [key: string]: string }
 }
+
+export interface OAuthSettings {
+  token: string,
+  secret: string
+}

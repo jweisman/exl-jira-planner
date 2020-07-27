@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  jiraLoginUrl: "http://localhost:3000",
+  jiraProxy: "http://localhost:3000",
   jiraUrl: "https://jira.exlibrisgroup.com",
   serviceUrl: "https://api-eu.exldevnetwork.net/jira-planner"
 };

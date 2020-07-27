@@ -24,10 +24,12 @@ export class CapacityComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.loading = true;
     this.capacityService.get().pipe(
       tap(capacity => this.capacity = capacity),
       switchMap(() => this.jira.getVersions()),
-      tap(versions => this.versions = versions)
+      tap(versions => this.versions = versions),
+      finalize(()=>this.loading=false)
     ).subscribe({
       error: err => this.toastr.error('Error retrieving data')
     });
@@ -35,8 +37,23 @@ export class CapacityComponent implements OnInit {
 
   add() {
     const username = prompt("Team leader username");
-    if (username) {
+    if (username && !this.capacity[username]) {
       this.capacity[username] = {};
+    }
+  }
+
+  delete(team: string) {
+    if (confirm(`Are you sure you wish to delete capacity for ${team}?`)) {
+      delete this.capacity[team];
+    }
+  }
+
+  edit(team: string) {
+    const username = prompt("New team leader username");
+    if (username && !this.capacity[username]) {
+      //this.capacity[team] = this.capacity[username];
+      //delete this.capacity[team];
+      delete Object.assign(this.capacity, {[username]: this.capacity[team] })[team]
     }
   }
 
