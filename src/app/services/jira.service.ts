@@ -37,7 +37,10 @@ export class JiraService {
       expand( response => response.isLast ? empty() : this.http.get<any>(response.nextPage)),
       map( obj => obj.values ),
       reduce((acc, x) => acc.concat(x), []),
-      map( versions => versions.filter(v=>!v.released && /^\d{6}/.test(v.name)).slice(0,NUM_OF_SPRINTS))
+      map( versions => versions.filter(v=>!v.released)),
+      /* Filter out non-monthly releases */
+      /* map( versions => versions.filter(v=>/^\d{6}/.test(v.name))), */
+      map( versions => versions.slice(0,NUM_OF_SPRINTS))
     )
   }
 
@@ -50,7 +53,7 @@ export class JiraService {
       map( obj => obj.issues ),
       reduce((acc, x) => acc.concat(x), []),
       /* Filter out defect allocations */
-      map(issues=>issues.filter(i=>!(i.fields.issuetype.id==3 && /defect/i.test(i.fields.summary))))
+      /* map(issues=>issues.filter(i=>!(i.fields.issuetype.id==3 && /defect/i.test(i.fields.summary)))) */
     )
   }
 
