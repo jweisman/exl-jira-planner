@@ -14,8 +14,12 @@
   </mat-select>
 </mat-form-field>
 <div cdkDropListGroup *ngIf="issues" class="grid">
-  <div class="planner-container" *ngFor="let version of versions">
-    <h3>{{version.name}}</h3>
+  <mat-expansion-panel [expanded]="true" class="planner-container" *ngFor="let version of versions">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        {{version.name}}
+      </mat-panel-title>
+    </mat-expansion-panel-header>
     <div
       cdkDropList
       [cdkDropListData]="issues[version.id]"
@@ -31,7 +35,7 @@
         <span><strong>CAPACITY / SCHEDULED</strong></span>
         <span [style.background-color]="status(version.id)">{{ teamCapacity(version.id) }} / {{ sum(version.id) }}</span>
     </div>
-  </div>    
+  </mat-expansion-panel>    
 </div>
 <div style="visibility: hidden; position: fixed"
     [style.left]="contextMenuPosition.x"

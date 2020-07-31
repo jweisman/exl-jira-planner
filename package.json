@@ -1,6 +1,7 @@
 {
   "name": "exl-jira-planner",
-  "version": "0.0.0",
+  "description": "Jira Planning Tool for Ex Libris",
+  "version": "0.1.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",

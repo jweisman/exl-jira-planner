@@ -5,6 +5,7 @@ import { CapacityService } from '../services/capacity.service';
 import { Capacity } from '../models/planner';
 import { tap, switchMap, finalize } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import { PreferencesService } from '../services/preferences.service';
 
 @Component({
   selector: 'app-capacity',
@@ -20,14 +21,15 @@ export class CapacityComponent implements OnInit {
   constructor(
     private jira: JiraService,
     private capacityService: CapacityService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private prefService: PreferencesService
   ) { }
 
   ngOnInit() {
     this.loading = true;
     this.capacityService.get().pipe(
       tap(capacity => this.capacity = capacity),
-      switchMap(() => this.jira.getVersions()),
+      switchMap(() => this.jira.getVersions(this.prefService.preferences.numOfVersions)),
       tap(versions => this.versions = versions),
       finalize(()=>this.loading=false)
     ).subscribe({

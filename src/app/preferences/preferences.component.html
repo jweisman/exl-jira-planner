@@ -1,0 +1,20 @@
+<form *ngIf="form" [formGroup]="form">
+  <mat-form-field>
+    <mat-label>Number of Sprints</mat-label>
+    <mat-select formControlName="numOfVersions">
+      <mat-option *ngFor="let val of [].constructor(18); index as i" [value]="i+1">
+        {{i+1}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <div class="checkbox-container">
+    <mat-checkbox formControlName="includeBuckets" labelPosition="before">Include bucket releases in planner</mat-checkbox>
+  </div>
+  <div class="threshold-container">
+    <h3>Threshold</h3>
+    <p>Green: &lt;= <input matInput type="number" step="0.1" min="0.5" max="1.9" [formControl]="form.get('threshold.green')"></p>
+    <p>Yellow: &gt; {{form.get('threshold.green').value}} and &lt;= {{form.get('threshold.red').value}}</p>
+    <p>Red: &gt; <input matInput type="number" step="0.1" min="0.5" max="1.9" [formControl]="form.get('threshold.red')"></p>
+  </div>
+  <pre>{{form.value | json}}</pre>  
+</form>

@@ -11,6 +11,11 @@
         <app-capacity></app-capacity>
       </ng-template>
     </mat-tab>
+    <mat-tab label="Preferences">
+      <ng-template matTabContent>
+        <app-preferences></app-preferences>
+      </ng-template>
+    </mat-tab>    
   </mat-tab-group>
   <div class="footer" *ngIf="user">Logged in to <a href="{{jiraHome}}" target="_blank">{{jiraHome}}</a> as {{user.name}} (<a href="#" (click)="logout()">Logout</a>)</div>
 </div>

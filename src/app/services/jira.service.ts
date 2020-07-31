@@ -1,14 +1,14 @@
 import { Injectable, Component, HostListener } from '@angular/core';
-import { expand, map, reduce, catchError } from 'rxjs/operators';
-import { empty, Observable, of } from 'rxjs';
+import { expand, map, reduce, catchError, mergeMap } from 'rxjs/operators';
+import { empty, Observable, of, iif } from 'rxjs';
 import { JiraHttpClient } from './httpClient';
 import { Version } from '../models/jira';
 import { HttpParams } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { environment } from 'src/environments/environment';
 import { OAuthSettings } from '../models/planner';
+import { PreferencesService } from './preferences.service';
 
-const NUM_OF_SPRINTS = 9;
 const ISSUES_BULK_SIZE = 200;
 const JIRA_AUTH_STORAGE = 'jiraAuth';
 const WINDOW_PROPS = "width=750,height=500,resizable,";
@@ -21,6 +21,7 @@ export class JiraService {
 
   constructor(
     private http: JiraHttpClient,
+    private prefService: PreferencesService,
     private dialog: MatDialog
   ) { 
     let auth = localStorage.getItem(JIRA_AUTH_STORAGE);
@@ -32,15 +33,19 @@ export class JiraService {
     }
   }
 
-  getVersions(): Observable<Array<Version>> {
+  getVersions(num): Observable<Array<Version>> {
     return this.withErrorChecking(this.http.get<any>('/project/URM/version?orderBy=sequence')).pipe(
       expand( response => response.isLast ? empty() : this.http.get<any>(response.nextPage)),
       map( obj => obj.values ),
       reduce((acc, x) => acc.concat(x), []),
       map( versions => versions.filter(v=>!v.released)),
       /* Filter out non-monthly releases */
-      /* map( versions => versions.filter(v=>/^\d{6}/.test(v.name))), */
-      map( versions => versions.slice(0,NUM_OF_SPRINTS))
+      mergeMap( versions => iif(
+        ()=>this.prefService.preferences.includeBuckets,
+        of(versions),
+        of(versions.filter(v=>/^\d{6}/.test(v.name)))
+      )),
+      map( versions => versions.slice(0,num))
     )
   }
 

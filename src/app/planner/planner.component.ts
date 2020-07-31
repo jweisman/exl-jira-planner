@@ -10,6 +10,7 @@ import { CapacityService } from '../services/capacity.service';
 import { Version, Issue } from '../models/jira';
 import { ToastrService } from 'ngx-toastr';
 import { MatMenuTrigger } from '@angular/material/menu';
+import { PreferencesService } from '../services/preferences.service';
 
 @Component({
   selector: 'app-planner',
@@ -31,7 +32,8 @@ export class PlannerComponent implements OnInit {
   constructor(
     private jira: JiraService,
     private capacityService: CapacityService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private prefService: PreferencesService
   ) { }
 
   ngOnInit() {
@@ -47,12 +49,7 @@ export class PlannerComponent implements OnInit {
           }
         })
       }),
-      switchMap( () => this.jira.getVersions()),
-      tap( results => {
-        this.versions = results;
-        this.issues = {};
-        this.versions.forEach(v=>this.issues[v.id]=[]);
-      }),
+      switchMap( () => this.getVersions()),
       finalize(()=>this.loading=false)
     )
     .subscribe({
@@ -60,16 +57,26 @@ export class PlannerComponent implements OnInit {
     });
   }
 
-  onSelectTeam(event: MatSelectChange) {
-    this.selectTeam(event.value);
+  getVersions() {
+    return this.jira.getVersions(this.prefService.preferences.numOfVersions).pipe(
+      tap( results => {
+        this.versions = results;
+        this.issues = {};
+        this.versions.forEach(v=>this.issues[v.id]=[]);
+      })
+    );
   }
 
-  selectTeam(team: string) {
-    this.selectedTeam = team;
+  onSelectTeam(event: MatSelectChange) {
+    this.selectedTeam = event.value;
+    this.loadIssues();
+  }
+
+  loadIssues() {
     this.loading = true;
     /* Clear issue arrays */
     Object.keys(this.issues).forEach(id=>this.issues[id]=[]);
-    this.jira.getIssues(team, this.versions).pipe(
+    this.jira.getIssues(this.selectedTeam, this.versions).pipe(
       finalize(()=>this.loading = false)
     )
     .subscribe(issues=>{
@@ -96,9 +103,10 @@ export class PlannerComponent implements OnInit {
     const status = this.sum(versionId) / this.teamCapacity(versionId);
     if (this.sum(versionId) == 0) {
       return 'white';
-    } else if (status <=1.1) {
+    } else if (status <= this.prefService.preferences.threshold.green) {
       return '#04ff00ad';
-    } else if (status > 1.1 && status < 1.2) {
+    } else if (status > this.prefService.preferences.threshold.green 
+      && status <= this.prefService.preferences.threshold.red) {
       return '#ffd400ad';
     } else {
       return '#ff0000ad';
@@ -158,7 +166,7 @@ export class PlannerComponent implements OnInit {
       next: () => {
         this.toastr.success(`Successfully updated ${Object.keys(this.issuesToUpdate).length} issue(s)`);
         this.issuesToUpdate = {};
-        setTimeout(() => this.selectTeam(this.selectedTeam), 1000);
+        setTimeout(() => this.loadIssues(), 1000);
       },
       error: err => this.toastr.error("Error updated issues: " + err.message)
     })
