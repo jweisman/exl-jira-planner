@@ -5,14 +5,7 @@
     >
   </mat-progress-spinner>
 </div>
-<mat-form-field>
-  <mat-label>Team Leader</mat-label>
-  <mat-select (selectionChange)="onSelectTeam($event)">
-    <mat-option *ngFor="let tl of teamleaders" [value]="tl">
-      {{teams[tl].displayName}}
-    </mat-option>
-  </mat-select>
-</mat-form-field>
+<app-select-team></app-select-team>
 <div cdkDropListGroup *ngIf="issues" class="grid">
   <mat-expansion-panel [expanded]="true" class="planner-container" *ngFor="let version of versions">
     <mat-expansion-panel-header>
@@ -28,7 +21,7 @@
       [attr.data-versionid]="version.id"
       (cdkDropListDropped)="drop($event)">
       <div class="planner-box" *ngFor="let issue of issues[version.id]; index as i" (contextmenu)="onContextMenu($event, i, version.id)" cdkDrag>
-        <span><img src="{{issue.fields.issuetype.iconUrl}}"><a target="_blank" href="{{jiraHost}}/browse/{{issue.key}}">{{issue.fields.summary}}</a></span><span>{{issue.fields.customfield_10132}}</span>
+        <span><img src="{{issue.fields.issuetype.iconUrl}}"><a target="_blank" href="{{jiraHost}}/browse/{{issue.key}}">{{issue.fields.summary}}</a></span><span>{{issue.fields[estimateField]}}</span>
       </div>
     </div>
     <div class="planner-summary">
@@ -53,6 +46,3 @@
 <div class="command-container">
   <button mat-stroked-button color="primary" [disabled]="!ready" (click)="update()">Update Issues</button>
 </div>
-<!--
-<pre>{{issuesToUpdate | json}}</pre>
--->

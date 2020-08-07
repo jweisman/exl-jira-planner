@@ -13,6 +13,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatExpansionModule } from '@angular/material/expansion'
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCardModule } from '@angular/material/card';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -26,6 +27,8 @@ import { JiraService, JiraAuthenticationDialog } from './services/jira.service';
 import { CapacityService } from './services/capacity.service';
 import { MainComponent } from './main/main.component';
 import { PreferencesService } from './services/preferences.service';
+import { RollupComponent } from './rollup/rollup.component';
+import { SelectTeamComponent } from './select-team/select-team.component';
 
 @NgModule({
    declarations: [
@@ -34,7 +37,9 @@ import { PreferencesService } from './services/preferences.service';
       CapacityComponent,
       PreferencesComponent,
       MainComponent,
-      JiraAuthenticationDialog
+      RollupComponent,
+      SelectTeamComponent,
+      JiraAuthenticationDialog,
    ],
    imports: [
       BrowserModule,
@@ -54,6 +59,7 @@ import { PreferencesService } from './services/preferences.service';
       MatIconModule,
       MatExpansionModule,
       MatCheckboxModule,
+      MatCardModule,
    ],
    providers: [
       {

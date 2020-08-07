@@ -3,4 +3,6 @@ export const environment = {
   jiraProxy: "http://il-docker01.corp.exlibrisgroup.com:8091",
   jiraUrl: "https://jira.exlibrisgroup.com",
   serviceUrl: "https://api-eu.exldevnetwork.net/jira-planner",
+  estimateField: "customfield_10132",
+  project: "URM",
 };

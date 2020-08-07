@@ -20,3 +20,5 @@ $ cd exl-jira-planner
 $ docker-compose build
 $ docker-compose up
 ``` 
+
+Or `npm run start:docker`.

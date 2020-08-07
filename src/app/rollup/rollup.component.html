@@ -1,0 +1,35 @@
+<div class="loading-shade" *ngIf="loading">
+  <mat-progress-spinner 
+    mode="indeterminate"
+    diameter="50"
+    >
+  </mat-progress-spinner>
+</div>
+<app-select-team></app-select-team>
+<div *ngIf="versions">
+  <mat-card class="year-card" *ngFor="let year of years">
+    <mat-card-header>
+      <mat-card-title>{{year}}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-card class="quarter-card" *ngFor="let q of quarters[year] | keyvalue">
+        <mat-card-header>
+          <mat-card-title>{{year}} Q{{q.key}}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <table>
+            <tr *ngFor="let version of q.value">
+              <td>{{version.name}}</td><td class="planner-summary"><span [style.background-color]="status(version.id)">{{ teamCapacity([version.id]) }} / {{ sum([version.id]) }}</span></td>
+            </tr>
+          </table>
+        </mat-card-content>
+        <mat-card-actions>
+          <div class="planner-summary">{{year}} Q{{q.key}} TOTAL: <span [style.background-color]="status(versionsQ(year, q.key))">{{teamCapacity(versionsQ(year, q.key))}} / {{sum(versionsQ(year, q.key))}}</span></div> 
+        </mat-card-actions>
+      </mat-card>
+    </mat-card-content>
+    <mat-card-actions>
+      <div class="planner-summary">{{year}} TOTAL: <span [style.background-color]="status(versionsQ(year))">{{teamCapacity(versionsQ(year))}} / {{sum(versionsQ(year))}}</span></div> 
+    </mat-card-actions>
+  </mat-card>
+</div>

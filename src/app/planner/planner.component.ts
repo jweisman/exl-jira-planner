@@ -3,14 +3,13 @@ import { environment } from 'src/environments/environment';
 import { switchMap, tap, finalize } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { MatSelectChange } from '@angular/material/select';
-import { Issues, Teams, Capacity } from '../models/planner';
+import { Issues } from '../models/planner';
 import { JiraService } from '../services/jira.service';
-import { CapacityService } from '../services/capacity.service';
 import { Version, Issue } from '../models/jira';
 import { ToastrService } from 'ngx-toastr';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { PreferencesService } from '../services/preferences.service';
+import { SelectTeamComponent } from '../select-team/select-team.component';
 
 @Component({
   selector: 'app-planner',
@@ -20,40 +19,32 @@ import { PreferencesService } from '../services/preferences.service';
 export class PlannerComponent implements OnInit {
   versions: Array<Version> = [];
   issues: Issues;
-  teams: Teams = {};
   loading = false;
-  selectedTeam: string;
   jiraHost = environment.jiraUrl;
-  capacity: Capacity;
+  estimateField = environment.estimateField;
+  @ViewChild(SelectTeamComponent) selectTeam: SelectTeamComponent;
   @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: '0px', y: '0px' };
   issuesToUpdate: { [key: string]: string } = {};
 
   constructor(
     private jira: JiraService,
-    private capacityService: CapacityService,
     private toastr: ToastrService,
     private prefService: PreferencesService
   ) { }
 
   ngOnInit() {
     this.loading = true;
-    this.capacityService.get().pipe(
-      tap( capacity => this.capacity = capacity ),
-      switchMap( () => forkJoin(Object.keys(this.capacity).map(user=>this.jira.getUser(user)))),
-      tap(results => {
-        results.forEach( user => {
-          this.teams[user.key] = {
-            displayName: user.displayName,
-            capacity: this.capacity[user.key]
-          }
-        })
-      }),
-      switchMap( () => this.getVersions()),
+  }
+
+  ngAfterViewInit() {
+    this.selectTeam.onTeamSelected.subscribe(this.loadIssues);
+    this.selectTeam.init().pipe(
+      switchMap(() => this.getVersions()),
       finalize(()=>this.loading=false)
     )
     .subscribe({
-      error: err => this.toastr.error('Error retrieving data')
+      error: err => this.toastr.error(`Error retrieving data: ${err.message}`)
     });
   }
 
@@ -67,16 +58,12 @@ export class PlannerComponent implements OnInit {
     );
   }
 
-  onSelectTeam(event: MatSelectChange) {
-    this.selectedTeam = event.value;
-    this.loadIssues();
-  }
-
-  loadIssues() {
+  loadIssues = (team: string) => {
     this.loading = true;
     /* Clear issue arrays */
     Object.keys(this.issues).forEach(id=>this.issues[id]=[]);
-    this.jira.getIssues(this.selectedTeam, this.versions).pipe(
+    
+    this.jira.getIssues(team, this.versions).pipe(
       finalize(()=>this.loading = false)
     )
     .subscribe(issues=>{
@@ -90,31 +77,18 @@ export class PlannerComponent implements OnInit {
   }
 
   sum(versionId: string): number {
-    return this.issues[versionId] ? this.issues[versionId].map(issue=>issue.fields.customfield_10132).reduce((a, b) => a + b, 0) : 0;
+    return this.issues[versionId] ? this.issues[versionId].map(issue=>issue.fields[this.estimateField]).reduce((a, b) => a + b, 0) : 0;
   }
 
   teamCapacity(versionId: string): number {
-    if (!this.selectedTeam) return 0;
-    const throughput = this.teams[this.selectedTeam].capacity[versionId];
+    if (!this.selectTeam.selectedTeam) return 0;
+    const throughput = this.selectTeam.teams[this.selectTeam.selectedTeam].capacity[versionId];
     return throughput ? parseInt(throughput) : 0;
   } 
 
   status(versionId: string) {
     const status = this.sum(versionId) / this.teamCapacity(versionId);
-    if (this.sum(versionId) == 0) {
-      return 'white';
-    } else if (status <= this.prefService.preferences.threshold.green) {
-      return '#04ff00ad';
-    } else if (status > this.prefService.preferences.threshold.green 
-      && status <= this.prefService.preferences.threshold.red) {
-      return '#ffd400ad';
-    } else {
-      return '#ff0000ad';
-    }
-  }
-
-  get teamleaders() {
-    return Object.keys(this.teams);
+    return this.sum(versionId) == 0 ? 'white' : this.prefService.status(status);
   }
 
   drop(event: CdkDragDrop<Issue[]>) {
@@ -166,7 +140,7 @@ export class PlannerComponent implements OnInit {
       next: () => {
         this.toastr.success(`Successfully updated ${Object.keys(this.issuesToUpdate).length} issue(s)`);
         this.issuesToUpdate = {};
-        setTimeout(() => this.loadIssues(), 1000);
+        setTimeout(() => this.loadIssues(this.selectTeam.selectedTeam), 1000);
       },
       error: err => this.toastr.error("Error updated issues: " + err.message)
     })

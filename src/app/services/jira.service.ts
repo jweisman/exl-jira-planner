@@ -1,8 +1,8 @@
 import { Injectable, Component, HostListener } from '@angular/core';
-import { expand, map, reduce, catchError, mergeMap } from 'rxjs/operators';
+import { expand, map, reduce, catchError, mergeMap, tap, delay } from 'rxjs/operators';
 import { empty, Observable, of, iif } from 'rxjs';
 import { JiraHttpClient } from './httpClient';
-import { Version } from '../models/jira';
+import { Version, User, Issue } from '../models/jira';
 import { HttpParams } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { environment } from 'src/environments/environment';
@@ -18,6 +18,8 @@ const WINDOW_PROPS = "width=750,height=500,resizable,";
 })
 export class JiraService {
   auth: OAuthSettings;
+  _versions: Version[];
+  _users: { [key: string]: User } = {};
 
   constructor(
     private http: JiraHttpClient,
@@ -33,11 +35,8 @@ export class JiraService {
     }
   }
 
-  getVersions(num): Observable<Array<Version>> {
-    return this.withErrorChecking(this.http.get<any>('/project/URM/version?orderBy=sequence')).pipe(
-      expand( response => response.isLast ? empty() : this.http.get<any>(response.nextPage)),
-      map( obj => obj.values ),
-      reduce((acc, x) => acc.concat(x), []),
+  getVersions(num: number): Observable<Array<Version>> {
+    return this._getVersions().pipe(
       map( versions => versions.filter(v=>!v.released)),
       /* Filter out non-monthly releases */
       mergeMap( versions => iif(
@@ -49,9 +48,29 @@ export class JiraService {
     )
   }
 
-  getIssues(user: string, versions: Array<Version>) {
+  getRollupVersions(year: string): Observable<Array<Version>> {
+    const regex = new RegExp(`^${year}`);
+    return this._getVersions().pipe(
+      map( versions => versions.filter(v=>regex.test(v.name)))
+    )
+  }
+
+  private _getVersions() {
+    return iif(
+      () => !!(this._versions),
+      of(this._versions),
+      this.withErrorChecking(this.http.get<any>(`/project/${environment.project}/version?orderBy=sequence`)).pipe(
+        expand( response => response.isLast ? empty() : this.http.get<any>(response.nextPage)),
+        map( obj => obj.values ),
+        reduce((acc, x) => acc.concat(x), []),
+        tap(versions=>this._versions = versions),
+      )
+    )
+  }
+
+  getIssues(user: string, versions: Array<Version>): Observable<Array<Issue>> {
     let params = new HttpParams()
-      .set('jql', `project = URM and fixVersion in (${versions.map(v=>v.id).join(',')}) and issuetype in (Story, Task) and assignee = ${user}`)
+      .set('jql', `project = ${environment.project} and fixVersion in (${versions.map(v=>v.id).join(',')}) and issuetype in (Story, Task) and assignee = ${user}`)
       .set('maxResults', ISSUES_BULK_SIZE.toString());
     return this.withErrorChecking(this.http.get<any>('/search', { params: params })).pipe(
       expand( response => response.startAt + response.issues.length >= response.total ? empty() : this.http.get<any>('/search', {params: params.set('startAt', response.startAt + ISSUES_BULK_SIZE)})),
@@ -62,12 +81,18 @@ export class JiraService {
     )
   }
 
-  getUser(user: string) {
-    return this.withErrorChecking(this.http.get<any>(`/user?username=${user}`))
+  getUser(username: string): Observable<User> {
+    return iif(
+      () => !!(this._users[username]),
+      of(this._users[username]).pipe(delay(0)), /* Prevent expression changed warning */
+      this.withErrorChecking(this.http.get<User>(`/user?username=${username}`)).pipe(
+        tap(user=>this._users[username] = user)
+      )
+    )
   }
 
-  getCurrentUser() {
-    return this.withErrorChecking(this.http.get<any>('/myself'));
+  getCurrentUser(): Observable<User> {
+    return this.withErrorChecking(this.http.get<User>('/myself'));
   }
 
   updateFixVersion(key: string, id: string) {

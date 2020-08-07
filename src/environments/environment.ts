@@ -6,7 +6,9 @@ export const environment = {
   production: false,
   jiraProxy: "http://localhost:3000",
   jiraUrl: "https://jira.exlibrisgroup.com",
-  serviceUrl: "https://api-eu.exldevnetwork.net/jira-planner"
+  serviceUrl: "https://api-eu.exldevnetwork.net/jira-planner",
+  estimateField: "customfield_10132",
+  project: "URM",
 };
 
 /*

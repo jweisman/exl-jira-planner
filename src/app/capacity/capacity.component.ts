@@ -39,8 +39,14 @@ export class CapacityComponent implements OnInit {
 
   add() {
     const username = prompt("Team leader username");
-    if (username && !this.capacity[username]) {
-      this.capacity[username] = {};
+    if (username) {
+      if (this.capacity[username]) {
+        return this.toastr.warning(`User ${username} already defined`)
+      }
+      this.jira.getUser(username).subscribe({
+        next: () => this.capacity[username] = {},
+        error: e => this.toastr.warning(`User ${username} could not be found`)
+      })
     }
   }
 
@@ -52,10 +58,14 @@ export class CapacityComponent implements OnInit {
 
   edit(team: string) {
     const username = prompt("New team leader username");
-    if (username && !this.capacity[username]) {
-      //this.capacity[team] = this.capacity[username];
-      //delete this.capacity[team];
-      delete Object.assign(this.capacity, {[username]: this.capacity[team] })[team]
+    if (username) {
+      if (this.capacity[username]) {
+        return this.toastr.warning(`User ${username} already defined`)
+      }
+      this.jira.getUser(username).subscribe({
+        next: () => delete Object.assign(this.capacity, {[username]: this.capacity[team] })[team],
+        error: e => this.toastr.warning(`User ${username} could not be found`)
+      })
     }
   }
 

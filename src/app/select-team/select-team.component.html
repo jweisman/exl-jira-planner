@@ -1,0 +1,8 @@
+<mat-form-field>
+  <mat-label>Team Leader</mat-label>
+  <mat-select [formControl]="_selectedTeam">
+    <mat-option *ngFor="let tl of teamleaders" [value]="tl">
+      {{teams[tl].displayName}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>

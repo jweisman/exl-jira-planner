@@ -1,0 +1,28 @@
+:host {
+  margin: 20px;
+  display: block;
+}
+
+.mat-card.year-card {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.mat-card.quarter-card {
+  max-width: 23%;
+  display: inline-block;
+  margin: 0 5px 20px;
+}
+
+.planner-summary {
+  padding: 5px 5px;
+}
+
+.planner-summary span {
+  padding: 5px 15px;
+  background-color: lightgrey;
+  border-radius: 20px;
+  width: 100%;
+  margin-left: 5px;
+  white-space: nowrap;
+}
