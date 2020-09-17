@@ -8,6 +8,7 @@ export const environment = {
   jiraUrl: "https://jira.exlibrisgroup.com",
   serviceUrl: "https://api-eu.exldevnetwork.net/jira-planner",
   estimateField: "customfield_10132",
+  roadMapCodeField: "customfield_15101",
   project: "URM",
 };
 

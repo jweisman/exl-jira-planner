@@ -3,9 +3,9 @@ import { environment } from 'src/environments/environment';
 import { switchMap, tap, finalize } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
-import { Issues } from '../models/planner';
+import { BucketName, Issues } from '../models/planner';
 import { JiraService } from '../services/jira.service';
-import { Version, Issue } from '../models/jira';
+import { Version, Issue, issueBucket } from '../models/jira';
 import { ToastrService } from 'ngx-toastr';
 import { MatMenuTrigger } from '@angular/material/menu';
 import { PreferencesService } from '../services/preferences.service';
@@ -26,6 +26,7 @@ export class PlannerComponent implements OnInit {
   @ViewChild(MatMenuTrigger) contextMenu: MatMenuTrigger;
   contextMenuPosition = { x: '0px', y: '0px' };
   issuesToUpdate: { [key: string]: string } = {};
+  issueBucket = issueBucket;
 
   constructor(
     private jira: JiraService,
@@ -76,19 +77,24 @@ export class PlannerComponent implements OnInit {
     });
   }
 
-  sum(versionId: string): number {
-    return this.issues[versionId] ? this.issues[versionId].map(issue=>issue.fields[this.estimateField]).reduce((a, b) => a + b, 0) : 0;
+  sum(versionId: string, bucketName: BucketName = BucketName.dev): number {
+    return this.issues[versionId] ? this.issues[versionId]
+    /* Check Road Map Bucket */
+    .filter(issue=> issueBucket(issue) == bucketName)
+    .map(issue=>issue.fields[this.estimateField]).reduce((a, b) => a + b, 0) : 0;
   }
 
-  teamCapacity(versionId: string): number {
+  teamCapacity(versionId: string, bucketName: BucketName = BucketName.dev): number {
     if (!this.selectTeam.selectedTeam) return 0;
-    const throughput = this.selectTeam.teams[this.selectTeam.selectedTeam].capacity[versionId];
+    const throughput = this.selectTeam.teams[this.selectTeam.selectedTeam].capacity[versionId]
+      ? this.selectTeam.teams[this.selectTeam.selectedTeam].capacity[versionId][bucketName]
+      : 0;
     return throughput ? parseInt(throughput) : 0;
   } 
 
-  status(versionId: string) {
-    const status = this.sum(versionId) / this.teamCapacity(versionId);
-    return this.sum(versionId) == 0 ? 'white' : this.prefService.status(status);
+  status(versionId: string, bucketName: BucketName = BucketName.dev) {
+    const status = this.sum(versionId, bucketName) / this.teamCapacity(versionId, bucketName);
+    return this.sum(versionId, bucketName) == 0 ? 'white' : this.prefService.status(status);
   }
 
   drop(event: CdkDragDrop<Issue[]>) {

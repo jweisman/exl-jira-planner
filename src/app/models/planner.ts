@@ -12,7 +12,12 @@ export interface Teams {
 }
 
 export interface Capacity {
-  [key: string]: { [key: string]: string }
+  [team: string]: { [versionId: string]: { [key in BucketName ]: string } }
+}
+
+export enum BucketName {
+  dev = 'dev',
+  support = 'support'
 }
 
 export interface OAuthSettings {

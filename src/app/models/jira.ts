@@ -1,4 +1,6 @@
 import { range } from 'lodash';
+import { environment } from 'src/environments/environment';
+import { BucketName } from './planner';
 
 export interface Version {
   id: number;
@@ -11,6 +13,9 @@ export interface Issue {
   key: string;
   fields: { [name: string]: any }
 }
+
+export const issueBucket = (issue: Issue): BucketName => 
+  issue.fields[environment.roadMapCodeField] && issue.fields[environment.roadMapCodeField].value == 'N/A' ? BucketName.support : BucketName.dev
 
 export interface User {
   key: string;

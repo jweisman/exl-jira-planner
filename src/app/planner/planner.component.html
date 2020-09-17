@@ -5,8 +5,11 @@
     >
   </mat-progress-spinner>
 </div>
-<app-select-team></app-select-team>
-<div cdkDropListGroup *ngIf="issues" class="grid">
+<div class="command-container">
+  <app-select-team></app-select-team>
+  <button mat-stroked-button color="primary" [disabled]="!ready" (click)="update()">Update Issues</button>
+</div>
+<div cdkDropListGroup *ngIf="issues">
   <mat-expansion-panel [expanded]="true" class="planner-container" *ngFor="let version of versions">
     <mat-expansion-panel-header>
       <mat-panel-title>
@@ -16,17 +19,23 @@
     <div
       cdkDropList
       [cdkDropListData]="issues[version.id]"
-      class="planner-list"
+      class="planner-list grid"
       cdkDropListSortingDisabled
       [attr.data-versionid]="version.id"
       (cdkDropListDropped)="drop($event)">
-      <div class="planner-box" *ngFor="let issue of issues[version.id]; index as i" (contextmenu)="onContextMenu($event, i, version.id)" cdkDrag>
-        <span><img src="{{issue.fields.issuetype.iconUrl}}"><a target="_blank" href="{{jiraHost}}/browse/{{issue.key}}">{{issue.fields.summary}}</a></span><span>{{issue.fields[estimateField]}}</span>
+      <div class="planner-box" [ngClass]="{'bucket-support': issueBucket(issue)=='support'}" *ngFor="let issue of issues[version.id]; index as i" (contextmenu)="onContextMenu($event, i, version.id)" cdkDrag>
+        <span><img src="{{issue.fields.issuetype.iconUrl}}"><a target="_blank" href="{{jiraHost}}/browse/{{issue.key}}">{{issue.fields.summary}}</a></span><span class="tag">{{issue.fields[estimateField]}}</span>
       </div>
     </div>
     <div class="planner-summary">
-        <span><strong>CAPACITY / SCHEDULED</strong></span>
-        <span [style.background-color]="status(version.id)">{{ teamCapacity(version.id) }} / {{ sum(version.id) }}</span>
+      <div>
+        <span><strong>DEV CAPACITY / SCHEDULED</strong></span>
+        <span class="tag" [style.background-color]="status(version.id)">{{ teamCapacity(version.id) }} / {{ sum(version.id) }}</span>
+      </div>
+      <div>
+        <span><strong>SUPPORT CAPACITY / SCHEDULED- SUPPORT</strong></span>
+        <span class="tag" [style.background-color]="status(version.id, 'support')">{{ teamCapacity(version.id, 'support') }} / {{ sum(version.id, 'support') }}</span>
+      </div>
     </div>
   </mat-expansion-panel>    
 </div>
@@ -43,6 +52,3 @@
     <button mat-menu-item *ngFor="let version of versions"  (click)="onMoveVersion(version.id)">{{version.name}}</button>
   </ng-template>
 </mat-menu>
-<div class="command-container">
-  <button mat-stroked-button color="primary" [disabled]="!ready" (click)="update()">Update Issues</button>
-</div>
