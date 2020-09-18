@@ -23,7 +23,7 @@
       cdkDropListSortingDisabled
       [attr.data-versionid]="version.id"
       (cdkDropListDropped)="drop($event)">
-      <div class="planner-box" [ngClass]="{'bucket-support': issueBucket(issue)=='support'}" *ngFor="let issue of issues[version.id]; index as i" (contextmenu)="onContextMenu($event, i, version.id)" cdkDrag>
+      <div class="planner-box" [ngClass]="{'bucket-support': issueBucket(issue)==BucketName.support}" *ngFor="let issue of issues[version.id]; index as i" (contextmenu)="onContextMenu($event, i, version.id)" cdkDrag>
         <span><img src="{{issue.fields.issuetype.iconUrl}}"><a target="_blank" href="{{jiraHost}}/browse/{{issue.key}}">{{issue.fields.summary}}</a></span><span class="tag">{{issue.fields[estimateField]}}</span>
       </div>
     </div>
@@ -34,7 +34,7 @@
       </div>
       <div>
         <span><strong>SUPPORT CAPACITY / SCHEDULED- SUPPORT</strong></span>
-        <span class="tag" [style.background-color]="status(version.id, 'support')">{{ teamCapacity(version.id, 'support') }} / {{ sum(version.id, 'support') }}</span>
+        <span class="tag" [style.background-color]="status(version.id, BucketName.support)">{{ teamCapacity(version.id, BucketName.support) }} / {{ sum(version.id, BucketName.support) }}</span>
       </div>
     </div>
   </mat-expansion-panel>    

@@ -7,12 +7,16 @@ export interface Issues {
 export interface Teams { 
   [key: string]: { 
     displayName: string; 
-    capacity: { [key: string]: string }
+    capacity: VersionCapacity
   }
 }
 
 export interface Capacity {
-  [team: string]: { [versionId: string]: { [key in BucketName ]: string } }
+  [team: string]: VersionCapacity
+}
+
+export interface VersionCapacity {
+  [versionId: string]: { [key in BucketName ]: string }
 }
 
 export enum BucketName {

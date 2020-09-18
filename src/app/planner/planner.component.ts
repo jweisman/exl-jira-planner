@@ -27,6 +27,7 @@ export class PlannerComponent implements OnInit {
   contextMenuPosition = { x: '0px', y: '0px' };
   issuesToUpdate: { [key: string]: string } = {};
   issueBucket = issueBucket;
+  BucketName = BucketName;
 
   constructor(
     private jira: JiraService,

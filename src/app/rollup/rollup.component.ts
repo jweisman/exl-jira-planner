@@ -90,7 +90,9 @@ export class RollupComponent implements OnInit {
   teamCapacity(versionIds: string[]): number {
     if (!this.selectTeam.selectedTeam) return 0;
     return Object.entries(this.selectTeam.teams[this.selectTeam.selectedTeam].capacity)
-    .filter(([key, value])=>versionIds.includes(key)).map(([key, value]) => parseInt(value) || 0).reduce((a, b) => a + b, 0)
+    .filter(([key, value])=>versionIds.includes(key))
+    /* TODO: Align with new capacity */
+    .map(([key, value]) => parseInt(value.dev) || 0).reduce((a, b) => a + b, 0)
   }
 
   versionsQ(year: string, q: number = 0) {  
