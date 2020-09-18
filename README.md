@@ -18,7 +18,7 @@ This project can be deployed to Docker as follows:
 $ git clone https://github.com/jweisman/exl-jira-planner
 $ cd exl-jira-planner
 $ docker-compose build
-$ docker-compose up
+$ docker-compose up -d
 ``` 
 
 Or `npm run start:docker`.
