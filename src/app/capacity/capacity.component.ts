@@ -33,6 +33,14 @@ export class CapacityComponent implements OnInit {
       tap(versions => this.versions = versions),
       finalize(()=>this.loading=false)
     ).subscribe({
+      next: () => {
+        // Ensure all versions in  capacity
+        Object.values(this.capacity).forEach( capacity => {
+          this.versions.forEach(version=>{
+            if (!capacity[version.id]) capacity[version.id] = {support: null, dev: null};
+          })
+        })
+      },
       error: err => this.toastr.error('Error retrieving data')
     });
   }

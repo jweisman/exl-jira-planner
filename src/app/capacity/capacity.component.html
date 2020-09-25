@@ -16,8 +16,8 @@
     <th>{{team}}</th>
     <td *ngFor="let version of versions">
       <!-- Split up and down binding due to Elvis operator (safe) -->
-      <input type="text" [ngModel]="capacity[team][version.id]?.dev" (ngModelChange)="capacity[team][version.id]?.dev ? capacity[team][version.id].dev = $event : null" [name]="team+version.id+'dev'" placeholder="Dev"> / 
-      <input type="text" [ngModel]="capacity[team][version.id]?.support" (ngModelChange)="capacity[team][version.id]?.support ? capacity[team][version.id].support = $event : null" [name]="team+version.id+'support'" placeholder="Support">
+      <input type="text" [ngModel]="capacity[team][version.id]?.dev" (ngModelChange)="capacity[team][version.id] != undefined ? capacity[team][version.id].dev = $event : null" [name]="team+version.id+'dev'" placeholder="Dev"> / 
+      <input type="text" [ngModel]="capacity[team][version.id]?.support" (ngModelChange)="capacity[team][version.id] != undefined ? capacity[team][version.id].support = $event : null" [name]="team+version.id+'support'" placeholder="Support">
     </td>
     <td>
       <span>
