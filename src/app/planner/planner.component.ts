@@ -153,6 +153,13 @@ export class PlannerComponent implements OnInit {
     })
   }
 
+  refresh() {
+    if (!this.selectTeam.selectedTeam) return;
+    if (!this.ready || confirm("Discard unsaved changes?")) {
+      this.loadIssues(this.selectTeam.selectedTeam);
+    }
+  }
+
   get ready() {
     return Object.keys(this.issuesToUpdate).length != 0;
   }

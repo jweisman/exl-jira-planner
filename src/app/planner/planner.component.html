@@ -7,6 +7,7 @@
 </div>
 <div class="command-container">
   <app-select-team></app-select-team>
+  <button mat-stroked-button color="secondary" (click)="refresh()">Refresh</button>
   <button mat-stroked-button color="primary" [disabled]="!ready" (click)="update()">Update Issues</button>
 </div>
 <div cdkDropListGroup *ngIf="issues">

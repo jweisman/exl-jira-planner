@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { JiraService } from '../services/jira.service';
 import { environment } from 'src/environments/environment';
+import { MatTabGroup } from '@angular/material/tabs';
+import { PlannerComponent } from '../planner/planner.component';
 
 @Component({
   selector: 'app-main',
@@ -10,6 +12,9 @@ import { environment } from 'src/environments/environment';
 export class MainComponent implements OnInit {
   user: any
   jiraHome = environment.jiraUrl;
+  plannerTab = 0;
+  @ViewChild(MatTabGroup) tabs: MatTabGroup;
+  @ViewChild(PlannerComponent) planner: PlannerComponent;
 
   constructor(
     private jira: JiraService
@@ -26,5 +31,14 @@ export class MainComponent implements OnInit {
   logout() {
     this.jira.logout();
     location.reload();
+  }
+
+  selectedIndexChange(evt: any) {
+    if(evt === this.plannerTab) return;
+    if (this.planner && Object.keys(this.planner.issuesToUpdate).length > 0) {
+      if (!confirm('Discard unsaved changes?')) {
+        this.tabs.selectedIndex = this.plannerTab;
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 <h1>Jira Planner</h1>
 <div *ngIf="authenticated">
-  <mat-tab-group>
+  <mat-tab-group (selectedIndexChange)="selectedIndexChange($event)">
     <mat-tab label="Planning">
       <ng-template matTabContent>
         <app-planner></app-planner>
