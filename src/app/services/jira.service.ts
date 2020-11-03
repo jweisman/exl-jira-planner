@@ -70,7 +70,7 @@ export class JiraService {
 
   getIssues(user: string, versions: Array<Version>): Observable<Array<Issue>> {
     let params = new HttpParams()
-      .set('jql', `project = ${environment.project} and fixVersion in (${versions.map(v=>v.id).join(',')}) and issuetype in (Story, Task) and assignee = ${user}`)
+      .set('jql', `project = ${environment.project} and fixVersion in (${versions.map(v=>v.id).join(',')}) and issuetype in (Story, Task, "New Feature") and assignee = ${user}`)
       .set('maxResults', ISSUES_BULK_SIZE.toString());
     return this.withErrorChecking(this.http.get<any>('/search', { params: params })).pipe(
       expand( response => response.startAt + response.issues.length >= response.total ? empty() : this.http.get<any>('/search', {params: params.set('startAt', response.startAt + ISSUES_BULK_SIZE)})),
